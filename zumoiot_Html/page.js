@@ -73,13 +73,19 @@ $(function() {
             client.logout();
             $("#login").text("Log In");
         } else {
-            var provider = prompt("Effettuare Login con il provider:","aad") || 'aad';
+            var provider = prompt("Login with provider:","aad") || 'aad';
             client.login(provider).then(
                 function () { alert ("Welcome " + client.currentUser.userId); },
                 function (error) { alert ("Errore Login: " + error); }
             );
             $("#login").text("Log Out");
         }
+    });
+
+    $("#wipedata").on('click', function() {
+        var method = prompt("Choose method to call:","DELETE") || 'POST';
+        client.invokeApi("wipedata", {method: method, body: null})
+            .done(function(res){alert(res.response);} , handleError);
     });
 
     // On initial load, start by fetching the current data
