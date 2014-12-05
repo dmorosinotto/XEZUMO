@@ -14,113 +14,109 @@ namespace zumoiot
 {
     sealed partial class MainPage: Page
     {
-        private MobileServiceCollection<TodoItem, TodoItem> items;
-        private IMobileServiceTable<TodoItem> todoTable = App.MobileService.GetTable<TodoItem>();
+        private IMobileServiceTable<IOTData> IOTData = App.MobileService.GetTable<IOTData>();
+        private MobileServiceCollection<IOTData,IOTData> _items;
+        private MobileServiceUser _curruser;
+        
         private Socket io = IO.Socket(App.MobileService.ApplicationUri);
-
-        private struct Idata
-        {
-            public string id;
-            public string hwid;
-            public double temp;
-            public double umid;
-            public DateTime when;
-            public string ToString()
-            {
-#if WINDOWS_PHONE_APP
-                return string.Format("T: {1,2}° - U: {2,3}% | {0}", hwid, temp, umid);
-#else //WINDOWS_APP
-                return string.Format("Temp: {1,2}° , Umid: {2,3}% | {0}", hwid, temp, umid);
-#endif
-            }
-        }
-
         public MainPage()
         {
             this.InitializeComponent();
-            io.On("logiot", async msg =>
-            {
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-                {
-                    if (msg.GetType().Name == "String")
-                    {
-                        TextInput.Text = ">> " + msg.ToString();
-                    }
-                    else
-                    {
-                        Idata data = ((JObject)msg).ToObject<Idata>();
-                        items.Insert(0, new TodoItem() { Text = data.ToString(), Complete = false, Id = data.id });
-                    }
-                    //await new MessageDialog(msg.ToString(), "Notifica realtime socket.io").ShowAsync();
-                });
-            });
-        }
-
-        private async Task InsertTodoItem(TodoItem todoItem)
-        {
-            // This code inserts a new TodoItem into the database. When the operation completes
-            // and Mobile Services has assigned an Id, the item is added to the CollectionView
-            await todoTable.InsertAsync(todoItem);
-            items.Add(todoItem);
-        }
-
-        private async Task RefreshTodoItems()
-        {
-            MobileServiceInvalidOperationException exception = null;
-            try
-            {
-                // This code refreshes the entries in the list view by querying the TodoItems table.
-                // The query excludes completed TodoItems
-                items = await todoTable
-                    .Where(todoItem => todoItem.Complete == false)
-                    .ToCollectionAsync();
-            }
-            catch (MobileServiceInvalidOperationException e)
-            {
-                exception = e;
-            }
-
-            if (exception != null)
-            {
-                await new MessageDialog(exception.Message, "Error loading items").ShowAsync();
-            }
-            else
-            {
-                ListItems.ItemsSource = items;
-                this.ButtonSave.IsEnabled = true;
-            }
-        }
-
-        private async Task UpdateCheckedTodoItem(TodoItem item)
-        {
-            // This code takes a freshly completed TodoItem and updates the database. When the MobileService 
-            // responds, the item is removed from the list 
-            await todoTable.UpdateAsync(item);
-            items.Remove(item);
-            ListItems.Focus(Windows.UI.Xaml.FocusState.Unfocused);
-        }
-
-        private async void ButtonRefresh_Click(object sender, RoutedEventArgs e)
-        {
-            await RefreshTodoItems();
-        }
-
-        private async void ButtonSave_Click(object sender, RoutedEventArgs e)
-        {
-            var todoItem = new TodoItem { Text = TextInput.Text };
-            await InsertTodoItem(todoItem);
-        }
-
-        private async void CheckBoxComplete_Checked(object sender, RoutedEventArgs e)
-        {
-            CheckBox cb = (CheckBox)sender;
-            TodoItem item = cb.DataContext as TodoItem;
-            await UpdateCheckedTodoItem(item);
+            io.On("logiot",async msg => await RealtimeUpdate(msg)); 
         }
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            await RefreshTodoItems();
+            await RefreshItems();
+        }
+
+        private async Task RefreshItems()
+        {
+            await asyncCallAndShowErr(async () =>
+            {
+                _items = await IOTData
+                    .OrderByDescending(itm => itm.When)
+                    .ToCollectionAsync();
+                ListItems.ItemsSource = _items;
+            }, "Error Reading");
+        }
+
+        private async Task RealtimeUpdate(object msg)
+        {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                if (msg.GetType().Name == "String") {
+                    TextInput.Text = ">> " + msg.ToString();
+                    //await new MessageDialog(msg.ToString(), "Notifica realtime socket.io").ShowAsync();
+                } else {
+                    IOTData data = ((JObject)msg).ToObject<IOTData>();
+                    _items.Insert(0, data);
+                }
+            });
+        }
+
+        private Random rnd = new Random();
+        private async void ButtonSave_Click(object sender, RoutedEventArgs e)
+        {
+            await asyncCallAndShowErr(async () => {
+                var itm = new IOTData { DeviceLocation = TextInput.Text, Temperature = rnd.Next(10, 30), Umidity = rnd.NextDouble() * 100 };
+                await IOTData.InsertAsync(itm); //L'interfaccia viene aggiornata dal RealTimeUpdate tramite Socket.IO
+                TextInput.Text = "";
+            },"Error Inserting");
+        }
+
+        private async void CheckBoxDelete_Checked(object sender, RoutedEventArgs e)
+        {
+            await asyncCallAndShowErr(async () =>
+            {
+                var itm = ((CheckBox)sender).DataContext as IOTData;
+                await IOTData.DeleteAsync(itm);
+                _items.Remove(itm);
+            }, "Error Deleting");
+        }
+
+        private async void AppBarButtoAuth_Click(object sender, RoutedEventArgs e)
+        {   //TODO LOGIN con AAD
+            string message = null;
+            try {
+                if (_curruser == null) {
+                    _curruser = await App.MobileService.LoginAsync(MobileServiceAuthenticationProvider.WindowsAzureActiveDirectory);
+                    message = "Welcome " + _curruser.UserId;
+                } else {
+                    App.MobileService.Logout();
+                    _curruser = null;
+                    message = "You are Logged OFF!";
+                }
+            } catch (Exception ex) {
+                message = "Error Auth:" + ex.Message; 
+            }
+            await new MessageDialog(message).ShowAsync();
+            //Cambia l'icona in base allo stato del l'utente corrente
+            AppBarButtonAuth.Label = (_curruser == null ? "Log IN" : "Log OUT");
+            AppBarButtonAuth.Icon = new SymbolIcon((_curruser == null ? Symbol.Contact : Symbol.BlockContact));
+            await RefreshItems();
+        }
+
+        private async void ButtonWipe_Click(object sender, RoutedEventArgs e)
+        {
+            if (_curruser == null) {
+                await new MessageDialog("Devi essere Loggato per eseguire WIPEDATA!").ShowAsync();
+            } else {
+                try {
+                    await App.MobileService.InvokeApiAsync("wipedata",System.Net.Http.HttpMethod.Delete,null);
+                } catch {}
+            }
+        }
+
+        private async Task<bool> asyncCallAndShowErr(Func<Task> doCall, string exTitle) {
+            string errmsg = null; 
+            try {
+                await doCall(); 
+            } catch (Exception ex) {
+                errmsg = ex.Message;
+            }
+            if (errmsg != null) await new MessageDialog(errmsg, exTitle).ShowAsync();
+            return (errmsg==null);
         }
     }
 }

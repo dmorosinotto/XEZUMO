@@ -23,7 +23,6 @@ namespace zumoiot
     /// </summary>
     sealed partial class App : Application
     {
-
         // This MobileServiceClient has been configured to communicate with your Mobile Service's url
         // and application key. You're all set to start working with your Mobile Service!
         public static MobileServiceClient MobileService = new MobileServiceClient(
@@ -91,6 +90,10 @@ namespace zumoiot
             }
             // Ensure the current window is active
             Window.Current.Activate();
+
+            //TODO PUSH: Registrare il ChannelURI all'avvio dell'applicazione per far funzionare le Push Notification
+            // http://go.microsoft.com/fwlink/?LinkId=290986&clcid=0x409
+            zumoiot.zumoiotPush.UploadChannel();
         }
 
         /// <summary>
@@ -115,6 +118,18 @@ namespace zumoiot
             var deferral = e.SuspendingOperation.GetDeferral();
             //TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args) {
+            //TODO LOGIN con AAD
+            //Windows Phone 8.1 requires you tu handle the response for the WebAuthenticationBroker during Login
+#if WINDOWS_PHONE_APP
+            if (args.Kind == ActivationKind.WebAuthenticationBrokerContinuation) {
+                //Complete the sign-in process started by LoginAsync
+                App.MobileService.LoginComplete(args as WebAuthenticationBrokerContinuationEventArgs);
+            }
+#endif
+            base.OnActivated(args);
         }
     }
 }

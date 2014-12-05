@@ -17,7 +17,7 @@
 
         <!--TitlePanel contains the name of the application and page title-->
         <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="0,18,0,18">
-            <TextBlock Text="zumoiot" Style="{StaticResource TitleTextBlockStyle}" Margin="18,0"/>
+            <TextBlock Text="ZUMO IOT MONITOR" Style="{StaticResource TitleTextBlockStyle}" FontSize="35" Margin="18,0"/>
         </StackPanel>
 
         <!--ContentPanel - place additional content here-->
@@ -33,20 +33,25 @@
                 <ColumnDefinition Width="4*" />
                 <ColumnDefinition Width="2*" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource BodyTextBlockStyle}" Text="Enter some text below and click Save to insert a new TodoItem item into your database" TextWrapping="Wrap"/>
+            <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Style="{StaticResource BodyTextBlockStyle}" Text="Se non avete un device IOT potete generare dei dati Random inserendo un testo nel campo qui sotto e premendo SAVE" TextWrapping="Wrap"/>
             <TextBox Grid.Row="1" Grid.Column="0" Name="TextInput" Text="" />
-            <Button Grid.Row ="1" Grid.Column="1" Name="ButtonSave" Click="ButtonSave_Click" IsEnabled="False" Margin="10, 0, 0, 0">Save</Button>
-            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource BodyTextBlockStyle}" Text="Click refresh below to load the unfinished TodoItems from your database. Use the checkbox to complete and update your TodoItems" TextWrapping="Wrap"/>
-            <Button Grid.Row="3" Grid.ColumnSpan="2" Name="ButtonRefresh" Click="ButtonRefresh_Click" HorizontalAlignment="Stretch">Refresh</Button>
+            <Button Grid.Row ="1" Grid.Column="1" Name="ButtonSave" Click="ButtonSave_Click" Margin="10, 0, 0, 0">SAVE</Button>
+            <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Style="{StaticResource BodyTextBlockStyle}" Text="L'elenco qui sotto si aggiornato in Realtime grazie a Socket.IO - Se volete cancellare TUTTI i dati dal Database premete WIPEDATA!" TextWrapping="Wrap"/>
+            <Button Grid.Row="3" Grid.ColumnSpan="2" Name="ButtonWipe" Click="ButtonWipe_Click" HorizontalAlignment="Stretch">WIPEDATA</Button>
             <ListView  Grid.Row="4" Grid.ColumnSpan="2" Name="ListItems">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel Orientation="Horizontal">
-                            <CheckBox Name="CheckBoxComplete" IsChecked="{Binding Complete, Mode=TwoWay}" Checked="CheckBoxComplete_Checked" Content="{Binding Text}" Margin="10,5" VerticalAlignment="Center"/>
+                            <CheckBox Name="CheckBoxDelete" IsChecked="{Binding Selected, Mode=TwoWay}" Checked="CheckBoxDelete_Checked" Content="{Binding Text}" Margin="10,5" VerticalAlignment="Center"/>
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
         </Grid>
     </Grid>
+    <Page.BottomAppBar>
+        <CommandBar>
+            <AppBarButton Icon="Contact" Label="Log In" Name="AppBarButtonAuth" Click="AppBarButtoAuth_Click"/>
+        </CommandBar>
+    </Page.BottomAppBar>
 </Page>

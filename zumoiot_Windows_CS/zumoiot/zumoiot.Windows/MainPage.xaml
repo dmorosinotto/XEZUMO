@@ -18,49 +18,54 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <Grid Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,20">
                 <StackPanel>
                     <TextBlock Foreground="#0094ff" FontFamily="Segoe UI Light" Margin="0,0,0,6">MICROSOFT AZURE MOBILE SERVICES</TextBlock>
-                    <TextBlock Foreground="Gray" FontFamily="Segoe UI Light" FontSize="45" >zumoiot</TextBlock>
+                    <TextBlock Foreground="Gray" FontFamily="Segoe UI Light" FontSize="45" >ZumoIOT Admin Monitor</TextBlock>
                 </StackPanel>
             </Grid>
 
 
-            <Grid Grid.Row="1">
+            <Grid Grid.Row="1" Grid.Column="1">
                 <StackPanel>
 
-                    <local:QuickStartTask Number="1" Title="Insert a TodoItem" Description="Enter some text below and click Save to insert a new todo item into your database" />
+                    <local:QuickStartTask Number="2" Title="Inserisci Dati Random" Description="Se non hai un Device IOT, digita il nome della zona nel textbox qui sotto e premi il pulsante SAVE per inserire dai dati random!" />
 
                     <StackPanel Orientation="Horizontal" Margin="72,0,0,0">
                         <TextBox Name="TextInput" Margin="5" MinWidth="300"></TextBox>
-                        <Button Name="ButtonSave" Click="ButtonSave_Click" IsEnabled="False">Save</Button>
+                        <Button Name="ButtonSave" Click="ButtonSave_Click" >SAVE</Button>
                     </StackPanel>
 
                 </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="1" Grid.Column="1">
+            <Grid Grid.Row="1" Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition />
                 </Grid.RowDefinitions>
-                <StackPanel>
-                    <local:QuickStartTask Number="2" Title="Query and Update Data" Description="Click refresh below to load the unfinished TodoItems from your database. Use the checkbox to complete and update your TodoItems" />
-                    <Button Margin="72,0,0,0" Name="ButtonRefresh" Click="ButtonRefresh_Click">Refresh</Button>
+                <StackPanel Grid.Row="0">
+                    <local:QuickStartTask Number="1" Title="Realtime Data" Description="Qui sotto vengono mostrati i dati in realtime senza bisogno di aggiornare! Se volete cancellare tutti i dati dal Server premete WIPEDATA!" />
+                    <Button Margin="72,0,0,0" Name="ButtonWipe" Click="ButtonWipe_Click">WIPEDATA</Button>
                 </StackPanel>
 
                 <ListView Name="ListItems" Margin="62,10,0,0" Grid.Row="1">
                     <ListView.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <CheckBox Name="CheckBoxComplete" IsChecked="{Binding Complete, Mode=TwoWay}" Checked="CheckBoxComplete_Checked" Content="{Binding Text}" Margin="10,5" VerticalAlignment="Center"/>
+                                <CheckBox Name="CheckBoxDelete" IsChecked="{Binding Selected, Mode=TwoWay}" Checked="CheckBoxDelete_Checked" Content="{Binding Text}" Margin="10,5" VerticalAlignment="Center"/>
                             </StackPanel>
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
 
+            </Grid>
+
+            <Grid Grid.Row="2" Grid.Column="1">
+                <AppBarButton Icon="Contact" Label="Log In" Name="AppBarButtonAuth" Click="AppBarButtoAuth_Click"/>
             </Grid>
 
         </Grid>
