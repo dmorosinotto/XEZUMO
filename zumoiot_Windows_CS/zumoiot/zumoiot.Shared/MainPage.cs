@@ -7,6 +7,8 @@ using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
+using Quobject.SocketIoClientDotNet.Client;
+using Newtonsoft.Json.Linq;
 
 namespace zumoiot
 {
@@ -14,10 +16,44 @@ namespace zumoiot
     {
         private MobileServiceCollection<TodoItem, TodoItem> items;
         private IMobileServiceTable<TodoItem> todoTable = App.MobileService.GetTable<TodoItem>();
+        private Socket io = IO.Socket(App.MobileService.ApplicationUri);
+
+        private struct Idata
+        {
+            public string id;
+            public string hwid;
+            public double temp;
+            public double umid;
+            public DateTime when;
+            public string ToString()
+            {
+#if WINDOWS_PHONE_APP
+                return string.Format("T: {1,2}° - U: {2,3}% | {0}", hwid, temp, umid);
+#else //WINDOWS_APP
+                return string.Format("Temp: {1,2}° , Umid: {2,3}% | {0}", hwid, temp, umid);
+#endif
+            }
+        }
 
         public MainPage()
         {
             this.InitializeComponent();
+            io.On("logiot", async msg =>
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    if (msg.GetType().Name == "String")
+                    {
+                        TextInput.Text = ">> " + msg.ToString();
+                    }
+                    else
+                    {
+                        Idata data = ((JObject)msg).ToObject<Idata>();
+                        items.Insert(0, new TodoItem() { Text = data.ToString(), Complete = false, Id = data.id });
+                    }
+                    //await new MessageDialog(msg.ToString(), "Notifica realtime socket.io").ShowAsync();
+                });
+            });
         }
 
         private async Task InsertTodoItem(TodoItem todoItem)

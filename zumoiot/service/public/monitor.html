@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+  <head>
+    <title>ZUMO IOT - Socket.IO Monitor</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 16px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      th { font-weight: bolder; font-size: 18px; background: #000; color: #fff }
+      #log tr { padding: 5px 10px; }
+      #log tr:nth-child(odd) { background: #eee; }
+      #log tr td { vertical-align: middle; padding-left: 10px; padding-right: 10px }
+    </style>
+  </head>
+  <body>
+    <table cellspacing="2">
+    	<thead >
+    		<tr><th>DataOra</th><th>Disp</th><th>Umid</th><th>Temp</th></tr>
+    	</thead>
+    	<tbody id="log">
+    	</tbody>
+    </table>
+    <form action="">
+      <input id="cmd" autocomplete="off" /><button>Send remote</button>
+    </form>
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.9.1.min.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.0.6.js"></script>    
+    <script>
+var imgTUP = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAATCAYAAACKsM07AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAawAAAGsBDl9bUQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAEVSURBVDiNzdW9LoRBFMbx3xGJZENHIfFVuQoXQBQidBr3oZW4CxWlUscd6BQKBYlCVKyPTbBxFDtCs2t2V+FJ3mTmmfO8/3nnvMlEZqpVRDQwkpnP1ZlaQESs4B5tzGfmUU1upHYnSIxhEe+1oX4AX5rrJ9cv4A2jCIiO1v4ScIZz30e0hYOImP4rwBW20S5/1B7Gsds1kZlVD5Z1Gp1lPIZ1PGK2W26QJn9t7BW3+MjMm251AwNq9e8BF9joVTA6zNszs4nTXjVVXxARS2j9sFrF+1W1RzSJwzJ+wH7xhgdExAQamCnWCe7QKGvDATLzCU1cFmsTU2iWtZ6qbfILdrBa5sfF+1X9XDirWCjT68w8rsl9AuUze0em9jNxAAAAAElFTkSuQmCC88ba5cd36b8c2ecdbe404c2c926f5bb1"/>'; //TEMP UP 24x24 base 64var 
+var imgTDW = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAATCAYAAACKsM07AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAawAAAGsBDl9bUQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAE+SURBVDiNtdWxSlxBFMbx34mrMQZFjCIBGwkSDFgE0lhYpQviE1j4EFZ2PoCF2GjpgySFkMoqnV2apBSDERV0PSn2Lt7q7lzdfDAw584c/mf4ztyJzDRIEbGAZfzFaWZ2Byb1lZmNAy+xUc3f9Oelo1NQwyJ+RsQmurgorp4iQF/XuGyZ40WbzXVFxGxEnEXE5LAAE5irxR28x0hTUulx7/ALr1oUhPITdHFbgf4LYBorOIeIGMVBtbYfEfFcwAccYRcy8w4/qrXTbLitbVouMFaL97CGw6akJ7dpZt5gPTPvnwt4rWdyX+M1yEDTGwGVme/wufr0EdcRsVpQ2GAAPmEUW1X8DduYGhagg5laPIV5PcOHAviO3x7/oF9wrMWFa2zTzHyIiCvsVHsv8BYnpYAofNGW9Az+g69tXrR/hOaFdpCA/ZYAAAAASUVORK5CYII0f7e4e57e1134f981a091b00c63e8fae"/>'; //TEMP DW 24x24 base64
+var imgCMD = '<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAAAbsAAAG7AEedTg1AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAADNQTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8YBMDAAAABB0Uk5TAAggOEBgeH2AuMDW4PD3+BmnWgwAAABgSURBVBhXbc85EoAwDENREZZ8dt3/tBSOAwXq9OzxjKVP6l6k1bbta5TweRR5A2AZhCnnLtP2McK1Q3SU0HuDtwdkH8aAOefLHYDbPk5wngqYYNYXev4hfols7t+2rHoAMeYGWcLzDhwAAAAASUVORK5CYII2fc75866ac1ca23e8fa996b60c7d3088"/>'; //COMMAND 16x16 base64
+
+      //Invio di remote cmd tramite Socket.IO --> Riempie textbox inserimento su UniversalApp
+      var socket = io();
+      $('form').submit(function(){
+      	socket.emit('remote', $('#cmd').val());
+        $('#cmd').val('');
+        return false;
+      });
+
+      //Log realtime dei dati inseriti su tabella IOTData tramite Socket.IO logiot
+      var last;
+      socket.on('logiot', function(msg){
+      	var tr = $('<tr>');
+      	if (typeof msg === 'string') {
+      	  tr.append($('<td colspan="2">').text(msg))
+            .append($('<td>').text('REMOTE'))
+            .append($('<td>').text('>>').append($(imgCMD)));
+    		} else {
+    		  tr.append($('<td>').text(new Date(msg.when).toISOString()))
+    		    .append($('<td>').text(msg.hwid))
+    		    .append($('<td>').text(msg.umid))
+    		    .append($('<td>').text(msg.temp)
+              .append($( last < msg.temp ? imgTUP : imgTDW )));
+    		  last = msg.temp; 
+    		}
+    		$('#log').prepend(tr);
+      });
+
+    </script>
+  </body>
+</html>
