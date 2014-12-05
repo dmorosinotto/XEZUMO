@@ -67,6 +67,21 @@ $(function() {
 
     $("#refresh").on('click',refreshTodoItems);
 
+    $("#login").on('click', function() {
+        var isLoggedIn = client.currentUser !== null;
+        if (isLoggedIn) {
+            client.logout();
+            $("#login").text("Log In");
+        } else {
+            var provider = prompt("Effettuare Login con il provider:","aad") || 'aad';
+            client.login(provider).then(
+                function () { alert ("Welcome " + client.currentUser.userId); },
+                function (error) { alert ("Errore Login: " + error); }
+            );
+            $("#login").text("Log Out");
+        }
+    });
+
     // On initial load, start by fetching the current data
     refreshTodoItems();
 });

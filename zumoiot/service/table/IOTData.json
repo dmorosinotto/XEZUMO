@@ -8,10 +8,10 @@
         "permission": "public"
       },
       "update": {
-        "permission": "application"
+        "permission": "user"
       },
       "delete": {
-        "permission": "application"
+        "permission": "user"
       }
     }
   }
