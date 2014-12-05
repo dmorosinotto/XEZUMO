@@ -27,8 +27,8 @@ namespace zumoiot
         // This MobileServiceClient has been configured to communicate with your Mobile Service's url
         // and application key. You're all set to start working with your Mobile Service!
         public static MobileServiceClient MobileService = new MobileServiceClient(
-            "https://<SCRIVI_QUI_NOMESERVIZIO>.azure-mobile.net/",
-            "<SCRIVI_QUI_APPLICATIONKEY>"
+            "https://<SCRIVERE_QUI_NOMESERVIZIO>.azure-mobile.net/",
+            "<SCRIVERE_QUI_APPLICATIONKEY>"
         );
 
         /// <summary>
